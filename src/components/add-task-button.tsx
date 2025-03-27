@@ -1,51 +1,46 @@
-"use client"
+"use client";
 
-import type React from "react"
+import { useState } from "react";
+import { Plus } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { DatePicker } from "@/components/date-picker";
+import { useTaskContext } from "@/context/TaskContent";
 
-import { useState } from "react"
-import { Plus } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { DatePicker } from "@/components/date-picker"
+// Define allowed task statuses
+type TaskStatus = "not-started" | "in-progress" | "completed";
 
-interface Task {
-    id: number
-    title: string
-    status: string
-    date: Date
-    important: boolean
-}
-
-
-export function AddTaskButton({ tasks, setTasks }: { tasks: Task[], setTasks: any }) {
-    const [open, setOpen] = useState(false)
-    const [taskTitle, setTaskTitle] = useState("")
-    const [date, setDate] = useState<Date | undefined>(new Date())
+export function AddTaskButton() {
+    const { tasks, addTask } = useTaskContext(); // Use context instead of props
+    const [open, setOpen] = useState(false);
+    const [taskTitle, setTaskTitle] = useState("");
+    const [date, setDate] = useState<Date | undefined>(new Date());
 
     const handleSubmit = (e: React.FormEvent) => {
-        e.preventDefault()
+        e.preventDefault();
 
-        const capitalizedTitle = taskTitle.charAt(0).toUpperCase() + taskTitle.slice(1)
+        if (!taskTitle.trim()) return;
 
-        const newTask: Task = {
-            id: tasks.length + 1, 
+        const capitalizedTitle = taskTitle.charAt(0).toUpperCase() + taskTitle.slice(1);
+
+        const newTask = {
+            id: tasks.length + 1,
             title: capitalizedTitle,
-            status: "not-started",
+            status: "not-started" as TaskStatus, // Explicitly casting type
             date: date || new Date(),
             important: false,
-        }
+        };
 
-        setTasks([...tasks, newTask])
+        addTask(newTask); // Use context method
 
-        console.log("Task added:", newTask)
+        console.log("Task added:", newTask);
 
-        setTaskTitle("")
-        setDate(new Date())
-        setOpen(false)
-    }
-
+        setTaskTitle("");
+        setDate(new Date());
+        setOpen(false);
+    };
 
     return (
         <>
@@ -88,6 +83,5 @@ export function AddTaskButton({ tasks, setTasks }: { tasks: Task[], setTasks: an
                 </DialogContent>
             </Dialog>
         </>
-    )
+    );
 }
-

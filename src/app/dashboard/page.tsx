@@ -4,15 +4,10 @@ import { DashboardStats } from "@/components/dashboard-stats"
 import { AddTaskButton } from "@/components/add-task-button"
 import { useState } from "react"
 import { Task } from "@/types/task"
+import { useTaskContext } from "@/context/TaskContent"
 
 export default function DashboardPage() {
-    const INITIAL_TASKS: Task[] = [
-        { id: 1, title: "Complete project proposal", status: "in-progress", date: new Date(), important: false },
-        { id: 2, title: "Schedule team meeting", status: "not-started", date: new Date(), important: true },
-        { id: 3, title: "Review client feedback", status: "completed", date: new Date(), important: false },
-        { id: 4, title: "Update documentation", status: "not-started", date: new Date(), important: false },
-    ]
-    const [tasks, setTasks] = useState<Task[]>(INITIAL_TASKS)
+    const { tasks, updateTaskStatus, markAsImportant, deleteTask } = useTaskContext();
     return (
         <main className="min-h-screen bg-gray-50 pb-20">
             <div className="container mx-auto px-4 py-8">
@@ -24,10 +19,10 @@ export default function DashboardPage() {
 
                 <div className="bg-white rounded-lg shadow-md p-6">
                     <h2 className="text-xl font-semibold mb-4">Today's Tasks</h2>
-                    <TaskList tasks={tasks} setTasks={setTasks} />
+                    <TaskList/>
                 </div>
             </div>
-            <AddTaskButton tasks={tasks} setTasks={setTasks} />
+            <AddTaskButton/>
         </main>
     )
 }
