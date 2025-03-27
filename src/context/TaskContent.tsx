@@ -1,77 +1,153 @@
 "use client";
 
-import React, { createContext, useState, useContext, ReactNode } from "react";
+import React, { createContext, useState, useContext, useEffect, ReactNode } from "react";
+import { useUser } from "@clerk/nextjs"; // Import Clerk user hook
+import { createClient } from "@supabase/supabase-js";
 import { isSameDay } from "date-fns";
-import { INITIAL_TASKS } from "@/data";
 
-// Define the Task type
+// Initialize Supabase
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+const supabase = createClient(supabaseUrl as string, supabaseAnonKey as string);
+
+// Define Task type
 interface Task {
   id: number;
   title: string;
   status: "not-started" | "in-progress" | "completed";
-  date: Date;
+  date: string; // Stored as "YYYY-MM-DD"
   important: boolean;
+  user_id: string; // Each task is associated with a user
 }
 
-// Define the context type
+// Define Task Context Type
 interface TaskContextType {
   tasks: Task[];
-  setTasks: React.Dispatch<React.SetStateAction<Task[]>>;
-  addTask: (task: Task) => void;
+  addTask: (task: Omit<Task, "id">) => void;
   updateTaskStatus: (id: number, status: Task["status"]) => void;
   markAsImportant: (id: number) => void;
   deleteTask: (id: number) => void;
   getTasksByDate: (date: Date) => Task[];
 }
 
-// Create the context
+// Create Context
 const TaskContext = createContext<TaskContextType | undefined>(undefined);
 
-// Provide context to the app
+// Utility Function: Format Date as "YYYY-MM-DD"
+const formatDateToLocal = (date: Date): string => {
+  return date.getFullYear() + "-" + String(date.getMonth() + 1).padStart(2, "0") + "-" + String(date.getDate()).padStart(2, "0");
+};
+
+// Task Provider Component
 export function TaskProvider({ children }: { children: ReactNode }) {
-  const [tasks, setTasks] = useState<Task[]>(INITIAL_TASKS);
+  const { user } = useUser(); // Get authenticated user from Clerk
+  const [tasks, setTasks] = useState<Task[]>([]);
 
-  // Function to add a task
-  const addTask = (task: Task) => {
-    setTasks((prev) => [...prev, task]);
+  // Fetch tasks when user logs in
+  useEffect(() => {
+    if (user) {
+      fetchTasks();
+    }
+  }, [user]);
+
+  // Fetch user-specific tasks from Supabase
+  const fetchTasks = async () => {
+    if (!user) return;
+
+    const { data, error } = await supabase
+      .from("tasks")
+      .select("*")
+      .eq("user_id", user.id); // Get only logged-in user's tasks
+
+    if (error) {
+      console.error("Error fetching tasks:", error.message);
+    } else {
+      setTasks(data || []);
+    }
   };
 
-  // Function to update task status
-  const updateTaskStatus = (id: number, status: Task["status"]) => {
-    setTasks((prev) =>
-      prev.map((task) => (task.id === id ? { ...task, status } : task))
-    );
+  // Add new task
+  const addTask = async (task: Omit<Task, "id">) => {
+    if (!user) {
+      console.error("User not found!");
+      return;
+    }
+
+    const formattedTask = {
+      ...task,
+      user_id: user.id, // Assign task to the logged-in user
+      date: formatDateToLocal(new Date(task.date)), // Store date correctly
+    };
+
+    const { data, error } = await supabase.from("tasks").insert([formattedTask]).select();
+
+    if (error) {
+      console.error("Error adding task:", error.message);
+    } else if (data) {
+      setTasks((prev) => [data[0], ...prev]); // Add task to the top
+    }
   };
 
-  // Function to toggle task importance
-  const markAsImportant = (id: number) => {
-    setTasks((prev) =>
-      prev.map((task) =>
-        task.id === id ? { ...task, important: !task.important } : task
-      )
-    );
+  // Update task status
+  const updateTaskStatus = async (id: number, status: Task["status"]) => {
+    const { data, error } = await supabase
+      .from("tasks")
+      .update({ status })
+      .eq("id", id)
+      .select();
+
+    if (error) {
+      console.error("Error updating task:", error.message);
+    } else {
+      setTasks((prev) => prev.map((task) => (task.id === id ? { ...task, status } : task)));
+    }
   };
 
-  // Function to delete a task
-  const deleteTask = (id: number) => {
-    setTasks((prev) => prev.filter((task) => task.id !== id));
+  // Toggle important flag
+  const markAsImportant = async (id: number) => {
+    const task = tasks.find((task) => task.id === id);
+    if (!task) return;
+
+    const { data, error } = await supabase
+      .from("tasks")
+      .update({ important: !task.important })
+      .eq("id", id)
+      .select();
+
+    if (error) {
+      console.error("Error updating importance:", error.message);
+    } else {
+      setTasks((prev) =>
+        prev.map((task) => (task.id === id ? { ...task, important: !task.important } : task))
+      );
+    }
   };
 
-  // Function to get tasks for a specific date
+  // Delete task
+  const deleteTask = async (id: number) => {
+    const { error } = await supabase.from("tasks").delete().eq("id", id);
+
+    if (error) {
+      console.error("Error deleting task:", error.message);
+    } else {
+      setTasks((prev) => prev.filter((task) => task.id !== id));
+    }
+  };
+
+  // Get tasks by date
   const getTasksByDate = (date: Date): Task[] => {
-    return tasks.filter((task) => isSameDay(task.date, date));
+    const selectedDate = formatDateToLocal(date);
+    return tasks.filter((task) => task.date === selectedDate);
   };
 
   return (
-    <TaskContext.Provider
-      value={{ tasks, setTasks, addTask, updateTaskStatus, markAsImportant, deleteTask, getTasksByDate }}
-    >
+    <TaskContext.Provider value={{ tasks, addTask, updateTaskStatus, markAsImportant, deleteTask, getTasksByDate }}>
       {children}
     </TaskContext.Provider>
   );
 }
 
-// Custom hooks for accessing the task context
+// Custom Hook for Using Task Context
 export function useTaskContext() {
   const context = useContext(TaskContext);
   if (!context) {
@@ -80,7 +156,7 @@ export function useTaskContext() {
   return context;
 }
 
-// Hook for fetching tasks for a specific date
+// Hook to Get Tasks for a Specific Date
 export function useTasksByDate(date: Date | undefined): Task[] {
   const { getTasksByDate } = useTaskContext();
   return date ? getTasksByDate(date) : [];

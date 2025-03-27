@@ -47,7 +47,7 @@ export default function TaskList() {
             filterTasks(filter).map((task) => (
               <TaskItem
                 key={task.id}
-                task={task}
+                task={task as any}
                 onStatusChange={(status) => updateTaskStatus(task.id, status as TaskStatus)} // ✅ Cast status correctly
                 onToggleImportant={() => markAsImportant(task.id)}
                 onDelete={() => deleteTask(task.id)}

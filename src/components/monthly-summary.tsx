@@ -34,7 +34,7 @@ export function MonthlySummary() {
   const { tasks } = useTaskContext(); // Fetching tasks from context
   const [view, setView] = useState("monthly");
 
-  const MONTHLY_DATA = useMemo(() => getMonthlyData(tasks as Task[]), [tasks]);
+  const MONTHLY_DATA = useMemo(() => getMonthlyData(tasks as any), [tasks]);
   const maxCompleted = Math.max(...MONTHLY_DATA.map((item) => item.completed), 1);
   const maxHours = Math.max(...MONTHLY_DATA.map((item) => item.hours), 1);
 

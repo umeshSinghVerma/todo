@@ -14,11 +14,11 @@ export default function DashboardPage() {
                 <h1 className="text-3xl font-bold mb-8">Dashboard</h1>
 
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-                    <DashboardStats tasks={tasks as Task[]} />
+                    <DashboardStats tasks={tasks.map(task => ({ ...task, date: new Date(task.date) })) as Task[]} />
                 </div>
 
                 <div className="bg-white rounded-lg shadow-md p-6">
-                    <h2 className="text-xl font-semibold mb-4">Today's Tasks</h2>
+                    <h2 className="text-xl font-semibold mb-4">Today&apos;s Tasks</h2>
                     <TaskList/>
                 </div>
             </div>

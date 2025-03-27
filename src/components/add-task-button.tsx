@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { DatePicker } from "@/components/date-picker";
 import { useTaskContext } from "@/context/TaskContent";
+import { useUser } from "@clerk/nextjs";
 
 // Define allowed task statuses
 type TaskStatus = "not-started" | "in-progress" | "completed";
@@ -17,6 +18,8 @@ export function AddTaskButton() {
     const [open, setOpen] = useState(false);
     const [taskTitle, setTaskTitle] = useState("");
     const [date, setDate] = useState<Date | undefined>(new Date());
+    const {user} = useUser();
+    if(!user)return;
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
@@ -29,8 +32,9 @@ export function AddTaskButton() {
             id: tasks.length + 1,
             title: capitalizedTitle,
             status: "not-started" as TaskStatus, // Explicitly casting type
-            date: date || new Date(),
+            date: (date || new Date()).toISOString(),
             important: false,
+            user_id: user.id,
         };
 
         addTask(newTask); // Use context method
