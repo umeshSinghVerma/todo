@@ -75,16 +75,16 @@ export function TaskProvider({ children }: { children: ReactNode }) {
 
     const formattedTask = {
       ...task,
-      user_id: user.id, // Assign task to the logged-in user
-      date: formatDateToLocal(new Date(task.date)), // Store date correctly
+      user_id: user.id,
+      date: formatDateToLocal(new Date(task.date)),
     };
 
     const { data, error } = await supabase.from("tasks").insert([formattedTask]).select();
 
     if (error) {
       console.error("Error adding task:", error.message);
-    } else if (data) {
-      setTasks((prev) => [data[0], ...prev]); // Add task to the top
+    } else {
+      fetchTasks(); // Refetch tasks instead of updating state manually
     }
   };
 
@@ -125,14 +125,20 @@ export function TaskProvider({ children }: { children: ReactNode }) {
 
   // Delete task
   const deleteTask = async (id: number) => {
+    // Optimistically update state by filtering out the deleted task
+    setTasks((prev) => prev.filter((task) => task.id !== id));
+
+    // Perform the actual deletion in the background
     const { error } = await supabase.from("tasks").delete().eq("id", id);
 
     if (error) {
       console.error("Error deleting task:", error.message);
-    } else {
-      setTasks((prev) => prev.filter((task) => task.id !== id));
+      // If deletion fails, refetch the tasks to restore the correct state
+      fetchTasks();
     }
   };
+
+
 
   // Get tasks by date
   const getTasksByDate = (date: Date): Task[] => {
