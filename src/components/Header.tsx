@@ -9,8 +9,6 @@ import { SignedIn, SignedOut, SignInButton, SignUpButton, UserButton } from "@cl
 export default function Header() {
     const pathname = usePathname()
 
-    if (pathname === "/") return null
-
     return (
         <header className="border-b bg-white">
             <div className="container mx-auto px-4 py-3 flex items-center justify-between">
@@ -39,13 +37,17 @@ export default function Header() {
                             <span className="hidden sm:inline">Summary</span>
                         </Link>
                     </Button>
+                </nav>
+                <div>
                     <SignedOut>
-                        <SignInButton />
+                        <SignInButton>
+                            <Button variant="default">Sign In</Button>
+                        </SignInButton>
                     </SignedOut>
                     <SignedIn>
                         <UserButton />
                     </SignedIn>
-                </nav>
+                </div>
             </div>
         </header>
     )

@@ -2,6 +2,7 @@
 
 import React, { createContext, useState, useContext, ReactNode } from "react";
 import { isSameDay } from "date-fns";
+import { INITIAL_TASKS } from "@/data";
 
 // Define the Task type
 interface Task {
@@ -28,7 +29,7 @@ const TaskContext = createContext<TaskContextType | undefined>(undefined);
 
 // Provide context to the app
 export function TaskProvider({ children }: { children: ReactNode }) {
-  const [tasks, setTasks] = useState<Task[]>([]);
+  const [tasks, setTasks] = useState<Task[]>(INITIAL_TASKS);
 
   // Function to add a task
   const addTask = (task: Task) => {

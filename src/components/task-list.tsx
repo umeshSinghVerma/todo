@@ -3,18 +3,17 @@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { TaskItem } from "@/components/task-item";
 import { isToday } from "date-fns";
-import { Task } from "@/types/task";
+import type { Task, TaskStatus } from "@/types/task";
 import { useTaskContext } from "@/context/TaskContent";
 
 // Define allowed task statuses
-type TaskStatus = "not-started" | "in-progress" | "completed";
 
 export default function TaskList() {
   const { tasks, updateTaskStatus, markAsImportant, deleteTask } = useTaskContext();
 
   // Define filters for different task categories
   const filterTasks = (filter: string) => {
-    return tasks.filter((task:Task) => {
+    return tasks.filter((task:any) => {
       switch (filter) {
         case "today":
           return isToday(task.date);
@@ -23,7 +22,7 @@ export default function TaskList() {
         case "not-started":
         case "in-progress":
         case "completed":
-          return task.status === filter; // ✅ Now TypeScript knows it's a valid status
+          return task.status === (filter as TaskStatus);; // ✅ Now TypeScript knows it's a valid status
         default:
           return true; // "all" case
       }
@@ -32,13 +31,13 @@ export default function TaskList() {
 
   return (
     <Tabs defaultValue="all" className="w-full">
-      <TabsList className="grid grid-cols-6 mb-6">
+      <TabsList className="grid grid-cols-3 mb-6">
         <TabsTrigger value="all">All</TabsTrigger>
         <TabsTrigger value="today">Today</TabsTrigger>
         <TabsTrigger value="important">Important</TabsTrigger>
-        <TabsTrigger value="not-started">Not Started</TabsTrigger>
+        {/* <TabsTrigger value="not-started">Not Started</TabsTrigger>
         <TabsTrigger value="in-progress">In Progress</TabsTrigger>
-        <TabsTrigger value="completed">Completed</TabsTrigger>
+        <TabsTrigger value="completed">Completed</TabsTrigger> */}
       </TabsList>
 
       {/* Render Tasks based on selected tab */}

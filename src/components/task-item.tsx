@@ -42,7 +42,7 @@ export function TaskItem({ task, onStatusChange, onToggleImportant, onDelete }: 
 
     return (
         <Card className="transform transition-all hover:scale-[1.01] hover:shadow-lg">
-            <CardContent className="p-4 flex items-center justify-between">
+            <CardContent className="p-4 flex flex-wrap  items-center justify-between gap-5">
                 <div className="flex items-center space-x-3">
                     <Button
                         variant="ghost"
@@ -60,19 +60,7 @@ export function TaskItem({ task, onStatusChange, onToggleImportant, onDelete }: 
                     </div>
                 </div>
 
-                <div className="flex items-center space-x-2">
-                    <Badge
-                        variant="outline"
-                        className={`flex items-center gap-1 ${statusColors[task.status as keyof typeof statusColors]}`}
-                    >
-                        {statusIcons[task.status as keyof typeof statusIcons]}
-                        {task.status === "in-progress"
-                            ? "In Progress"
-                            : task.status === "not-started"
-                                ? "Not Started"
-                                : "Completed"}
-                    </Badge>
-
+                <div className="flex items-center space-x-4 ml-auto">
                     <Select value={task.status} onValueChange={onStatusChange}>
                         <SelectTrigger className="w-[120px]">
                             <SelectValue placeholder="Status" />
@@ -84,8 +72,7 @@ export function TaskItem({ task, onStatusChange, onToggleImportant, onDelete }: 
                         </SelectContent>
                     </Select>
 
-                    {/* Delete button */}
-                    <Button variant="destructive" size="icon" onClick={onDelete}>
+                    <Button className="cursor-pointer" variant="destructive" size="icon" onClick={onDelete}>
                         <Trash2 className="h-5 w-5" />
                         <span className="sr-only">Delete task</span>
                     </Button>

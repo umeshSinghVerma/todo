@@ -1,37 +1,49 @@
-"use client"
+"use client";
 
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { useMemo, useState } from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Task, TaskStatus } from "@/types/task";
+import { useTaskContext } from "@/context/TaskContent";
 
-// Mock data for demonstration
-const MONTHLY_DATA = [
-  { month: "January", completed: 12, hours: 28 },
-  { month: "February", completed: 18, hours: 34 },
-  { month: "March", completed: 24, hours: 42 },
-  { month: "April", completed: 32, hours: 38 },
-  { month: "May", completed: 28, hours: 36 },
-  { month: "June", completed: 34, hours: 50 },
-]
+// Function to group and calculate tasks per month
+const getMonthlyData = (tasks: Task[]) => {
+  const monthlyData: Record<string, { completed: number; hours: number }> = {};
 
-// Weekly data
-const WEEKLY_DATA = [
-  { week: "Week 1", completed: 6, hours: 12 },
-  { week: "Week 2", completed: 8, hours: 14 },
-  { week: "Week 3", completed: 10, hours: 12 },
-  { week: "Week 4", completed: 12, hours: 16 },
-]
+  tasks.forEach((task) => {
+    const month = task.date.toLocaleString("default", { month: "long" });
+
+    if (!monthlyData[month]) {
+      monthlyData[month] = { completed: 0, hours: 0 };
+    }
+
+    if (task.status === TaskStatus.Completed) {
+      monthlyData[month].completed += 1;
+      monthlyData[month].hours += 2; // Assuming avg 2 hours per task
+    }
+  });
+
+  return Object.entries(monthlyData).map(([month, data]) => ({
+    month,
+    completed: data.completed,
+    hours: data.hours,
+  }));
+};
 
 export function MonthlySummary() {
-  // Find the maximum value for scaling
-  const maxCompleted = Math.max(...MONTHLY_DATA.map((item) => item.completed))
-  const maxHours = Math.max(...MONTHLY_DATA.map((item) => item.hours))
+  const { tasks } = useTaskContext(); // Fetching tasks from context
+  const [view, setView] = useState("monthly");
+
+  const MONTHLY_DATA = useMemo(() => getMonthlyData(tasks as Task[]), [tasks]);
+  const maxCompleted = Math.max(...MONTHLY_DATA.map((item) => item.completed), 1);
+  const maxHours = Math.max(...MONTHLY_DATA.map((item) => item.hours), 1);
 
   return (
     <div className="space-y-6">
       <Card>
         <CardHeader className="flex flex-row items-center justify-between">
           <CardTitle>Task Completion</CardTitle>
-          <Select defaultValue="monthly">
+          <Select defaultValue="monthly" onValueChange={(val) => setView(val)}>
             <SelectTrigger className="w-[180px]">
               <SelectValue placeholder="View" />
             </SelectTrigger>
@@ -108,21 +120,21 @@ export function MonthlySummary() {
               <div className="grid grid-cols-2 gap-4">
                 <div className="border rounded-lg p-4">
                   <p className="text-sm text-muted-foreground">Average Tasks per Month</p>
-                  <p className="text-2xl font-bold">24.6</p>
+                  <p className="text-2xl font-bold">{(MONTHLY_DATA.reduce((acc, item) => acc + item.completed, 0) / MONTHLY_DATA.length).toFixed(1)}</p>
                 </div>
                 <div className="border rounded-lg p-4">
                   <p className="text-sm text-muted-foreground">Average Hours per Month</p>
-                  <p className="text-2xl font-bold">38.0</p>
+                  <p className="text-2xl font-bold">{(MONTHLY_DATA.reduce((acc, item) => acc + item.hours, 0) / MONTHLY_DATA.length).toFixed(1)}</p>
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div className="border rounded-lg p-4">
                   <p className="text-sm text-muted-foreground">Total Tasks (YTD)</p>
-                  <p className="text-2xl font-bold">148</p>
+                  <p className="text-2xl font-bold">{MONTHLY_DATA.reduce((acc, item) => acc + item.completed, 0)}</p>
                 </div>
                 <div className="border rounded-lg p-4">
                   <p className="text-sm text-muted-foreground">Total Hours (YTD)</p>
-                  <p className="text-2xl font-bold">228</p>
+                  <p className="text-2xl font-bold">{MONTHLY_DATA.reduce((acc, item) => acc + item.hours, 0)}</p>
                 </div>
               </div>
             </div>
@@ -137,17 +149,17 @@ export function MonthlySummary() {
             <div className="space-y-4">
               <div className="border rounded-lg p-4">
                 <p className="text-sm text-muted-foreground">Average Time per Task</p>
-                <p className="text-2xl font-bold">1.54 hours</p>
-                <p className="text-xs text-muted-foreground mt-1">-0.2 hours from last month</p>
+                <p className="text-2xl font-bold">
+                  {(MONTHLY_DATA.reduce((acc, item) => acc + item.hours, 0) /
+                    MONTHLY_DATA.reduce((acc, item) => acc + item.completed, 0)).toFixed(2)} hours
+                </p>
               </div>
               <div className="border rounded-lg p-4">
                 <p className="text-sm text-muted-foreground">Completion Rate</p>
                 <div className="flex items-center space-x-2">
-                  <p className="text-2xl font-bold">92%</p>
-                  <span className="text-xs text-green-600">↑ 3%</span>
-                </div>
-                <div className="w-full h-2 bg-gray-200 rounded-full mt-2">
-                  <div className="h-full bg-green-500 rounded-full" style={{ width: "92%" }}></div>
+                  <p className="text-2xl font-bold">
+                    {((tasks.filter((task) => task.status === TaskStatus.Completed).length / tasks.length) * 100).toFixed(1)}%
+                  </p>
                 </div>
               </div>
             </div>
@@ -155,6 +167,5 @@ export function MonthlySummary() {
         </Card>
       </div>
     </div>
-  )
+  );
 }
-
