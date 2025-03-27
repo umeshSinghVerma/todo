@@ -17,22 +17,22 @@ export default function Header() {
                 </Link>
 
                 <nav className="flex items-center space-x-1">
-                    <Button asChild variant={pathname === "/dashboard" ? "default" : "ghost"} size="sm">
-                        <Link href="/dashboard" className="flex items-center">
+                    <Button asChild variant={pathname === "/" ? "default" : "ghost"} size="sm">
+                        <Link href="/" className="flex items-center">
                             <Home className="mr-2 h-4 w-4" />
                             <span className="hidden sm:inline">Dashboard</span>
                         </Link>
                     </Button>
 
-                    <Button asChild variant={pathname === "/dashboard/calendar" ? "default" : "ghost"} size="sm">
-                        <Link href="/dashboard/calendar" className="flex items-center">
+                    <Button asChild variant={pathname === "/calendar" ? "default" : "ghost"} size="sm">
+                        <Link href="/calendar" className="flex items-center">
                             <Calendar className="mr-2 h-4 w-4" />
                             <span className="hidden sm:inline">Calendar</span>
                         </Link>
                     </Button>
 
-                    <Button asChild variant={pathname === "/dashboard/summary" ? "default" : "ghost"} size="sm">
-                        <Link href="/dashboard/summary" className="flex items-center">
+                    <Button asChild variant={pathname === "/summary" ? "default" : "ghost"} size="sm">
+                        <Link href="/summary" className="flex items-center">
                             <BarChart2 className="mr-2 h-4 w-4" />
                             <span className="hidden sm:inline">Summary</span>
                         </Link>
